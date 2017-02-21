@@ -1,2 +1,2 @@
 # bug-reports
-report bugs found by me
+reports of bugs found by me
