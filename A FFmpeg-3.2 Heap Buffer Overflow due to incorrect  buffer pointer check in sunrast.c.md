@@ -1,17 +1,17 @@
-#Overview
+# Overview
 A Heap Buffer Overflow vulnerability in FFmpeg-3.2 was found with AFL (http://lcamtuf.coredump.cx/afl/). The vulnerability was trigged when FFmpeg trying to decode an input image (a frame) to a JP2 file. The vulnerability is a Heap Buffer Overflow vulnerability due to some improper out-of-bound access check (in fact, an improper integer check). The vulnerability can cause Denial-of-Service and Information Disclosure and may cause more critical impact.
 
-#Software & Environments
-##Software
+# Software & Environments
+## Software
   FFmpeg (https://www.ffmpeg.org/)
   The latest version (download from: https://www.ffmpeg.org/releases/ffmpeg-snapshot.tar.bz2 OR https://github.com/FFmpeg/FFmpeg )
  
-##Operating System 
+## Operating System 
   Ubuntu 16.04 i686 Desktop
   > uname –a
   >> Linux ubuntu 4.4.0-21-generic #37-Ubuntu SMP Mon Apr 18 18:34:49 UTC 2016 i686 i686 i686 GNU/Linux
  
-##Compilers 
+## Compilers 
   GCC + CLANG + rr
   > gcc --version  
   >> gcc (Ubuntu 5.3.1-14ubuntu2.1) 5.3.1 20160413
@@ -22,16 +22,16 @@ A Heap Buffer Overflow vulnerability in FFmpeg-3.2 was found with AFL (http://lc
   > rr --version 
   >> rr version 4.4.0
   
-#Reproduction
+# Reproduction
   The crash can be trigged by executing ‘ffmpeg’ (or its debug version, ‘ffmpeg_g’) with the PoC image file as its input and output to a JP2 file. 
-##GCC version:
+## GCC version:
 
     mkdir build-gcc-debug<br/>
     cd build-gcc-debug
     ../configure --extrac-cflags=”-g” --extra-cxxflags=”-g” --extra-ldflags=”-g” --enable-debug  
     make
     ./ffmpeg –i  /* the poc file */ a.jp2` 
-##Clang with asan:
+## Clang with asan:
 
     mkdir build-clang-asan
     cd build-clang-asan
@@ -39,7 +39,7 @@ A Heap Buffer Overflow vulnerability in FFmpeg-3.2 was found with AFL (http://lc
     make
     ./ffmpeg –i /* the poc file */ a.jp2
 
-#EXCEPTION WITH ASAN
+# EXCEPTION WITH ASAN
 
     ffmpeg version N-82145-g0779396 Copyright (c) 2000-2016 the FFmpeg developers
       built with clang version 3.8.0-2ubuntu4 (tags/RELEASE_380/final)
@@ -99,10 +99,10 @@ A Heap Buffer Overflow vulnerability in FFmpeg-3.2 was found with AFL (http://lc
       Right alloca redzone:     cb
     ==18178==ABORTING
 
-#Analysis
+# Analysis
 The crash happens in function “sunrast_decode_frame” when copying data from source buffer (aka. avpkt->data) to destination buffer (aka. ptr).
 
-##crash stack
+## crash stack
 
     Program received signal SIGSEGV, Segmentation fault.
     __memcpy_sse2_unaligned () at ../sysdeps/i386/i686/multiarch/memcpy-sse2-unaligned.S:651
@@ -438,7 +438,7 @@ So, the capacity of buffer ‘avpkt->data’ is (physical size of input file + 3
  
 Also, I can analyze the capacity of buf ‘ptr’, however, the analysis is a little more complicated. I think it’s possible to trigger out-of-bound write to buffer ‘ptr’, however, it needs more skill to set ‘w’, ‘h’, ‘depth’ and craft the sample to make it have proper physical size.
 
-#Conclusions
+# Conclusions
 The vulnerability is a Heap Buffer Overflow vulnerability due to an incomplete buffer-overflow check which are already there and can be bypassed by crafting an input image with proper header data. The vulnerability can cause Denial-of-Service, Information Disclosure and may cause more critical impact.
 
 **This vulnerability was firstly reported to RedHat Security Team. Now it has been confirmed by the upstream and has been patched, which can be found by this link:**
